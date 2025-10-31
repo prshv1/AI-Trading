@@ -64,7 +64,7 @@ def deepseek(content):
     start_time = time.perf_counter() # Record the start time
     client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
     msg = client.chat.completions.create(
-        model="meta-llama/llama-4-maverick:free",
+        model="deepseek/deepseek-chat-v3.1:free",
         messages=[
             {
                 "role": "system",
