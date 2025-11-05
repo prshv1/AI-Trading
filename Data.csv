@@ -1,2 +1,2 @@
-Timestamp,Tottal Holdings,BTC,ETH,Sol, USDC,
-YYYY-MM-DD HH:MM:SS,10000,0,0,0,10000
+Timestamp,Tottal Holdings,Number of Holding BTC,Number of Holding ETH,Number of Holding SOL,USDC,Current BTC_USDC Rate,Current ETH_USDC Rate,Current SOL_USDC Rate
+2025-11-05 20:36:07,10000.00,0.00,0.00,0.00,10000.00,103458.50,3463.95,163.08
