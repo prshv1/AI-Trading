@@ -5,16 +5,19 @@ from typing import List, Dict, Any
 import requests
 import pandas as pd
 from openai import OpenAI
+import requests
+from requests.exceptions import ConnectionError, Timeout, RequestException
+
 
 # Configuration
 BACKPACK_API_URL = "https://api.backpack.exchange/api/v1/klines"
 TRADING_SYMBOLS = ["USDT_USDC", "BTC_USDC", "ETH_USDC", "SOL_USDC"]
 KLINE_INTERVAL = "15m"
-LOOKBACK_HOURS = 24
-OUTPUT_FILE = "Data.csv"
+LOOKBACK_HOURS = 12
+OUTPUT_FILE = "AI-Trading/Data.csv"
 
 # File paths 
-API_KEY_PATH = "AI-Trading/Backend/Main.py" #file to create Ai-Trading-Api-Key.txt and make sure to add your OpenRouter API key in it
+API_KEY_PATH = "AI-Trading/Backend/Ai-Trading-Api-Key.txt" #file to create Ai-Trading-Api-Key.txt and make sure to add your OpenRouter API key in it
 SYSTEM_PROMPT_PATH = "AI-Trading/Backend/system_prompt.txt"
 
 
@@ -54,8 +57,7 @@ def get_24hr_market_data() -> str:
     
     return str(market_data)
 
-
-def analyze_with_deepseek(market_data: str) -> str:
+def analyze_with_deepseek(market_data: str, timeout: int = 120) -> str:
     # Load API credentials
     api_key = load_file_content(API_KEY_PATH)
     system_prompt = load_file_content(SYSTEM_PROMPT_PATH)
@@ -83,7 +85,6 @@ def analyze_with_deepseek(market_data: str) -> str:
     
     return response.choices[0].message.content
 
-
 def save_analysis_to_csv(analysis: str, filename: str = OUTPUT_FILE) -> None:
     df = pd.DataFrame([analysis])
     df.to_csv(filename, mode='a', header=False, index=False)
@@ -99,7 +100,7 @@ try:
     print("Saving results to CSV...")
     save_analysis_to_csv(analysis)
     
-    print("✓ Trade executed and logged successfully")
+    print("Trade executed and logged successfully")
     
 except FileNotFoundError as e:
     print(f"Error: {e}")
