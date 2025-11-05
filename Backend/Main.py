@@ -1,69 +1,73 @@
-from openai import OpenAI
+import os
 import time
-import requests
 from datetime import datetime, timedelta
+from typing import List, Dict, Any
+import requests
+import pandas as pd
+from openai import OpenAI
 
-def get_24hr_data():
+# Configuration
+BACKPACK_API_URL = "https://api.backpack.exchange/api/v1/klines"
+TRADING_SYMBOLS = ["USDT_USDC", "BTC_USDC", "ETH_USDC", "SOL_USDC"]
+KLINE_INTERVAL = "15m"
+LOOKBACK_HOURS = 24
+OUTPUT_FILE = "Data.csv"
 
-    Data = []
-    interval = '15m'
-    # Calculate timestamps for last 24 hours
-    current_time = int(time.time())  # Current time in seconds (Unix timestamp)
-    start_time = current_time - (24 * 60 * 60)  # 24 hours ago
+# File paths 
+API_KEY_PATH = "AI-Trading/Backend/Main.py" #file to create Ai-Trading-Api-Key.txt and make sure to add your OpenRouter API key in it
+SYSTEM_PROMPT_PATH = "AI-Trading/Backend/system_prompt.txt"
+
+
+def load_file_content(file_path: str) -> str:
+    try:
+        with open(file_path, 'r') as file:
+            return file.read().strip()
+    except FileNotFoundError:
+        raise FileNotFoundError(f"File not found: {file_path}")
+    except IOError as e:
+        raise IOError(f"Error reading file {file_path}: {e}")
+
+
+def get_24hr_market_data() -> str:
+    current_time = int(time.time())
+    start_time = current_time - (LOOKBACK_HOURS * 60 * 60)
     
-    # Gatharing Data
-    USDC_Data = requests.get(
-        url = f"https://api.backpack.exchange/api/v1/klines", 
-        params={
-            "symbol": 'USDT_USDC',
-            "interval": interval,
-            "startTime": start_time,
-            "endTime": current_time
-    })
-    Data.append({'USDC_Data:': USDC_Data.json()})
+    market_data = []
     
-    BTC_Data = requests.get(
-        url = f"https://api.backpack.exchange/api/v1/klines", 
-        params={
-            "symbol": 'BTC_USDC',
-            "interval": interval,
-            "startTime": start_time,
-            "endTime": current_time
-    })
-    Data.append({'BTC_Data:': BTC_Data.json()})
-
-    ETH_Data = requests.get(
-        url = f"https://api.backpack.exchange/api/v1/klines", 
-        params={
-            "symbol": 'ETH_USDC',
-            "interval": interval,
-            "startTime": start_time,
-            "endTime": current_time
-    })
-    Data.append({'ETH_Data:': ETH_Data.json()})
-
-    SOL_Data = requests.get(
-        url = f"https://api.backpack.exchange/api/v1/klines", 
-        params={
-            "symbol": 'SOL_USDC',
-            "interval": interval,
-            "startTime": start_time,
-            "endTime": current_time
-    })
-    Data.append({'SOL_Data:': SOL_Data.json()})
+    for symbol in TRADING_SYMBOLS:
+        try:
+            response = requests.get(
+                url=BACKPACK_API_URL,
+                params={
+                    "symbol": symbol,
+                    "interval": KLINE_INTERVAL,
+                    "startTime": start_time,
+                    "endTime": current_time,
+                }
+            )
+            response.raise_for_status()
+            market_data.append({f"{symbol}_data": response.json()})
+            
+        except requests.RequestException as e:
+            print(f"Warning: Failed to fetch data for {symbol}: {e}")
+            continue
+    
+    return str(market_data)
 
 
-    return (str(Data))
-
-def deepseek(content):
-    # Read API key from file
-    with open('/Users/prshv/Documents/Coding/Ai-Trading-Api-Key.txt', 'r') as file: api_key = file.read().strip()
-    # Read System Prompt
-    with open('/Users/prshv/Documents/Coding/AI-Trading/Backend/system_prompt.txt', 'r') as file: system_prompt = file.read().strip()
-    # Api Call
-    start_time = time.perf_counter() # Record the start time
-    client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
-    msg = client.chat.completions.create(
+def analyze_with_deepseek(market_data: str) -> str:
+    # Load API credentials
+    api_key = load_file_content(API_KEY_PATH)
+    system_prompt = load_file_content(SYSTEM_PROMPT_PATH)
+    
+    # Initialize OpenRouter client
+    client = OpenAI(
+        base_url="https://openrouter.ai/api/v1",
+        api_key=api_key
+    )
+    
+    # Make API call
+    response = client.chat.completions.create(
         model="deepseek/deepseek-chat-v3.1:free",
         messages=[
             {
@@ -72,12 +76,34 @@ def deepseek(content):
             },
             {
                 "role": "user",
-                "content": content
+                "content": market_data
             }
         ]
     )
-    end_time = time.perf_counter()
-    elapsed_time = end_time - start_time
-    return (elapsed_time, msg.choices[0].message.content)   
+    
+    return response.choices[0].message.content
 
-print(deepseek(get_24hr_data()))
+
+def save_analysis_to_csv(analysis: str, filename: str = OUTPUT_FILE) -> None:
+    df = pd.DataFrame([analysis])
+    df.to_csv(filename, mode='a', header=False, index=False)
+
+# Main execution
+try:
+    print("Fetching 24-hour market data...")
+    market_data = get_24hr_market_data()
+    
+    print("Analyzing with DeepSeek AI...")
+    analysis = analyze_with_deepseek(market_data)
+    
+    print("Saving results to CSV...")
+    save_analysis_to_csv(analysis)
+    
+    print("✓ Trade executed and logged successfully")
+    
+except FileNotFoundError as e:
+    print(f"Error: {e}")
+except requests.RequestException as e:
+    print(f"API Error: {e}")
+except Exception as e:
+    print(f"Unexpected error: {e}")
