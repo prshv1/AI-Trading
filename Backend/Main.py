@@ -1,10 +1,3 @@
-"""
-AI Trading Bot - Market Analysis and Trading Execution
-========================================================
-This module fetches market data from Backpack Exchange, analyzes it using AI,
-and logs trading decisions to a CSV file.
-"""
-
 import logging
 import os
 import time
@@ -22,7 +15,7 @@ from requests.exceptions import ConnectionError, Timeout, RequestException
 
 BACKPACK_API_URL = "https://api.backpack.exchange/api/v1/klines"
 OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
-OPENROUTER_MODEL = "meta-llama/llama-4-scout:free"
+OPENROUTER_MODEL = "openai/gpt-oss-20b:free"
 
 TRADING_SYMBOLS = ["USDT_USDC", "BTC_USDC", "ETH_USDC", "SOL_USDC"]
 KLINE_INTERVAL = "15m"

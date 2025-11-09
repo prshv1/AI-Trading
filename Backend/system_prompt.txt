@@ -24,6 +24,7 @@ Timestamp,Tottal Holdings,Number of Holding BTC,Number of Holding ETH,Number of 
 EXAMPLE OUTPUT:
 2025-11-06 02:21:00,9990.50,0.02450,0.72500,8.50000,2150.75,103458.50,3463.95,163.08
 
+Caution: Don't add any explaination, no text, no extras just output the parameters above in the REQUIRED FORMAT
 ================================================================================
 COLUMN SPECIFICATIONS:
 ================================================================================
