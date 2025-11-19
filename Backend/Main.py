@@ -7,9 +7,9 @@ import yfinance as yf
 from datetime import datetime
 
 # Configuration
-API_KEY_FILE = 'Gemini 3.0 Test/backend/API.txt'
-SYSTEM_PROMPT_FILE = 'Gemini 3.0 Test/backend/system_prompt.txt'
-DATA_LOG_FILE = 'Gemini 3.0 Test/backend/data.csv'
+API_KEY_FILE = 'AI-Trading /backend/API.txt'
+SYSTEM_PROMPT_FILE = 'AI-Trading /backend/system_prompt.txt'
+DATA_LOG_FILE = 'AI-Trading /backend/data.csv'
 OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions"
 MODEL_NAME = "openai/gpt-oss-20b:free" # Adjust based on available free models on OpenRouter
 
@@ -18,7 +18,7 @@ ASSETS = ['BTC-USD', 'ETH-USD', 'SOL-USD']
 ASSET_NAMES = ['BTC', 'ETH', 'SOL'] # Mapped names for cleaner logic
 
 def load_file_content(filepath):
-    """Reads text from a file."""
+
     if not os.path.exists(filepath):
         print(f"Error: {filepath} not found.")
         return None
@@ -26,7 +26,7 @@ def load_file_content(filepath):
         return f.read().strip()
 
 def get_market_data():
-    """Fetches last 24h data at 15m intervals for defined assets."""
+
     market_summary = {}
     current_prices = {}
     
@@ -61,7 +61,7 @@ def get_market_data():
     return current_prices, market_summary
 
 def get_last_portfolio_state():
-    """Reads the last row of data.csv to get current holdings."""
+
     if not os.path.exists(DATA_LOG_FILE):
         # Initialize with default imaginary money if file doesn't exist
         print("No history found. Starting new portfolio with $10,000 USDT.")
@@ -89,7 +89,6 @@ def get_last_portfolio_state():
         return {"USDT": 10000.0, "BTC": 0.0, "ETH": 0.0, "SOL": 0.0}
 
 def consult_oracle(api_key, system_prompt, current_prices, market_history, current_holdings):
-    """Sends data to OpenRouter/DeepSeek and gets trade decision."""
     
     # specific formatting for the prompt
     user_prompt = f"""
@@ -151,7 +150,6 @@ def consult_oracle(api_key, system_prompt, current_prices, market_history, curre
         return None
 
 def execute_trades_and_log(decision, current_prices, current_holdings):
-    """Calculates new holdings based on AI target values and logs to CSV."""
     
     # 1. Calculate Total Portfolio Value first (to validate AI didn't hallucinate extra money)
     total_value_usd = (
@@ -218,8 +216,7 @@ def execute_trades_and_log(decision, current_prices, current_holdings):
     print(f"Trade executed. New Portfolio Value: ${total_value_usd:.2f}")
     print(f"New Holdings: {json.dumps(new_holdings, indent=2)}")
 
-def main():
-    # 1. Setup
+# 1. Setup
     api_key = load_file_content(API_KEY_FILE)
     system_prompt = load_file_content(SYSTEM_PROMPT_FILE)
     
@@ -244,6 +241,3 @@ def main():
         execute_trades_and_log(decision, current_prices, current_holdings)
     else:
         print("Failed to get a valid decision from AI.")
-
-if __name__ == "__main__":
-    main()
